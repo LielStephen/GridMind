@@ -1,0 +1,17 @@
+# Add your backend python requirements here
+# e.g., fastapi, uvicorn, numpy, torch, gymnasium
+fastapi
+
+uvicorn
+
+numpy
+
+pandas
+
+matplotlib
+
+gymnasium
+
+python-dotenv
+
+pydantic
