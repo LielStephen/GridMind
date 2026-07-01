@@ -3,19 +3,20 @@ fastapi
 uvicorn[standard]
 pydantic
 
-# Scientific / RL
+# Scientific / RL / ML
 numpy
 pandas
 matplotlib
 gymnasium
-
-# Training (install separately if training)
-# stable-baselines3
-# torch
+torch
+xgboost
+scikit-learn
+optuna
+scipy
 
 # Configuration
 python-dotenv
 
 # Testing
 pytest
-httpx
+httpx

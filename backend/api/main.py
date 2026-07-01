@@ -181,6 +181,43 @@ async def take_step(
 
 
 # ---------------------------------------------------------------------------
+# Advanced RL & ML Endpoints
+# ---------------------------------------------------------------------------
+
+@app.get("/api/algorithms/compare", tags=["benchmarking"])
+async def compare_algorithms():
+    """Run head-to-head evaluation across SAC, TD3, PPO, MPC, Rule-Based, A2C, and DQN."""
+    from backend.rl.benchmark_suite import BenchmarkSuite
+    suite = BenchmarkSuite()
+    return suite.run_all_benchmarks()
+
+
+@app.get("/api/forecast/weather", tags=["forecasting"])
+async def forecast_weather(start_hour: float = Query(0.0, ge=0.0, le=24.0)):
+    """Return 24-hour ahead XGBoost/LSTM forecast for temperature and solar irradiance."""
+    from backend.ml.forecast import GridEnergyForecaster
+    forecaster = GridEnergyForecaster()
+    return forecaster.predict_24h(start_hour)
+
+
+@app.post("/api/anomalies/detect", tags=["ml"])
+async def detect_anomalies(telemetry: List[dict]):
+    """Detect building power and thermal anomalies using Isolation Forest."""
+    from backend.ml.anomaly_detector import GridAnomalyDetector
+    detector = GridAnomalyDetector()
+    return detector.detect_anomalies(telemetry)
+
+
+@app.post("/api/pinn/predict", tags=["ml"])
+async def pinn_predict(t_in: float, t_out: float, solar_pu: float, hvac_ratio: float):
+    """Predict next-step indoor temperature using Physics-Informed Neural Network (PINN)."""
+    from backend.ml.pinn_model import PINNPredictor
+    pinn = PINNPredictor()
+    next_temp = pinn.predict_next_temp(t_in, t_out, solar_pu, hvac_ratio)
+    return {"predicted_indoor_temp": next_temp}
+
+
+# ---------------------------------------------------------------------------
 # Standalone entry point
 # ---------------------------------------------------------------------------
 
@@ -192,3 +229,4 @@ if __name__ == "__main__":
         host=_api_cfg.host,
         port=_api_cfg.port,
     )
+
