@@ -1,155 +1,213 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Thermometer, ThermometerSun, Battery, Zap, DollarSign, Activity, Settings2, Power } from 'lucide-react';
-
-const API_BASE = 'http://localhost:8000';
+import React from 'react';
+import { useSimulation } from './hooks/useSimulation';
+import Sidebar from './components/Layout/Sidebar';
+import TopBar from './components/Layout/TopBar';
+import KpiGrid from './components/Dashboard/KpiGrid';
+import ThermalChart from './components/Dashboard/ThermalChart';
+import EnergyChart from './components/Dashboard/EnergyChart';
+import RewardChart from './components/Dashboard/RewardChart';
+import BatteryGauge from './components/Dashboard/BatteryGauge';
+import ActionPanel from './components/Dashboard/ActionPanel';
 
 function App() {
-  const [state, setState] = useState(null);
-  const [history, setHistory] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const {
+    current,
+    history,
+    cumulativeReward,
+    cumulativeCost,
+    isConnected,
+    isLoading,
+    isAutoRunning,
+    actionLog,
+    deltas,
+    clockDisplay,
+    reset,
+    step,
+    toggleAutoRun,
+  } = useSimulation();
 
-  const fetchReset = async () => {
-    setLoading(true);
-    try {
-      const res = await axios.post(`${API_BASE}/simulation/reset`);
-      const initial = res.data.initial_state;
-      // state: [Hour, IndoorTemp, OutdoorTemp, SolarGen, BatterySOC, Price, Occupancy]
-      const newState = {
-        step: 0,
-        indoor_temp: initial[1],
-        outdoor_temp: initial[2],
-        battery_soc: initial[4],
-        energy_cost: 0,
-        net_consumption: 0,
-        reward: 0
-      };
-      setState(newState);
-      setHistory([newState]);
-    } catch (e) {
-      console.error(e);
-    }
-    setLoading(false);
-  };
-
-  const takeAction = async (actionId) => {
-    try {
-      const res = await axios.post(`${API_BASE}/simulation/step?action=${actionId}`);
-      const data = res.data;
-      
-      setState((prev) => {
-        const nextState = {
-          ...data,
-          // Merge in battery soc since it's not strictly returned by step unless we parse obs
-          // Actually, we should ideally fetch the full state or just track what we have
-        };
-        setHistory(h => [...h.slice(-20), nextState]); // Keep last 20 steps
-        return nextState;
-      });
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  useEffect(() => {
-    fetchReset();
-  }, []);
-
-  if (loading || !state) {
-    return <div className="flex h-screen items-center justify-center bg-slate-900 text-white">Initializing Simulation...</div>;
+  if (isLoading) {
+    return (
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100vh',
+          background: 'var(--surface-base)',
+          flexDirection: 'column',
+          gap: 'var(--space-4)',
+        }}
+      >
+        <div
+          style={{
+            width: 40,
+            height: 40,
+            border: '3px solid var(--border-default)',
+            borderTopColor: 'var(--accent)',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+          }}
+        />
+        <span
+          style={{
+            fontSize: '0.875rem',
+            color: 'var(--text-muted)',
+            fontWeight: 500,
+          }}
+        >
+          Initializing GridMind...
+        </span>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
   }
 
+  // Determine battery charge/discharge state from last action
+  const lastAction = actionLog.length > 0 ? actionLog[0].action : null;
+  const isCharging = lastAction === 3;
+  const isDischarging = lastAction === 4;
+
   return (
-    <div className="min-h-screen bg-slate-900 p-8 text-slate-200">
-      <header className="mb-8 flex items-center justify-between border-b border-slate-700 pb-4">
-        <div className="flex items-center gap-3">
-          <Zap className="h-8 w-8 text-emerald-400" />
-          <h1 className="text-3xl font-bold tracking-tight text-white">GridMind Dashboard</h1>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="rounded-full bg-slate-800 px-4 py-1 text-sm font-medium border border-slate-700">
-            Step: <span className="text-emerald-400">{state.step}</span> / 96
-          </div>
-          <button onClick={fetchReset} className="flex items-center gap-2 rounded-lg bg-slate-700 px-4 py-2 hover:bg-slate-600 transition-colors">
-            <Power className="h-4 w-4" /> Reset Simulator
-          </button>
-        </div>
-      </header>
+    <div
+      style={{
+        display: 'flex',
+        minHeight: '100vh',
+        background: 'var(--surface-base)',
+      }}
+    >
+      {/* Sidebar */}
+      <Sidebar
+        isConnected={isConnected}
+        isAutoRunning={isAutoRunning}
+        onReset={reset}
+        onToggleAutoRun={toggleAutoRun}
+        terminated={current.terminated}
+      />
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-4">
-        {/* KPI Cards */}
-        <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur flex flex-col items-center justify-center">
-          <Thermometer className="mb-2 h-8 w-8 text-blue-400" />
-          <p className="text-sm text-slate-400">Indoor Temp</p>
-          <p className="text-3xl font-semibold text-white">{state.indoor_temp.toFixed(1)}°C</p>
-        </div>
-        
-        <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur flex flex-col items-center justify-center">
-          <ThermometerSun className="mb-2 h-8 w-8 text-orange-400" />
-          <p className="text-sm text-slate-400">Outdoor Temp</p>
-          <p className="text-3xl font-semibold text-white">{state.outdoor_temp.toFixed(1)}°C</p>
-        </div>
+      {/* Main content */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+        {/* Top bar */}
+        <TopBar
+          step={current.step}
+          clockDisplay={clockDisplay}
+          terminated={current.terminated}
+          occupancy={current.occupancy}
+          price={current.price}
+        />
 
-        <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur flex flex-col items-center justify-center">
-          <DollarSign className="mb-2 h-8 w-8 text-emerald-400" />
-          <p className="text-sm text-slate-400">Energy Cost</p>
-          <p className="text-3xl font-semibold text-white">${state.energy_cost.toFixed(2)}</p>
-        </div>
-
-        <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur flex flex-col items-center justify-center">
-          <Activity className="mb-2 h-8 w-8 text-purple-400" />
-          <p className="text-sm text-slate-400">Reward</p>
-          <p className="text-3xl font-semibold text-white">{state.reward.toFixed(2)}</p>
-        </div>
-
-        {/* Charts */}
-        <div className="col-span-1 lg:col-span-3 rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur">
-          <h2 className="mb-4 text-lg font-medium flex items-center gap-2">
-            <Settings2 className="h-5 w-5" /> Thermodynamic Profile
-          </h2>
-          <div className="h-72 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={history}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
-                <XAxis dataKey="step" stroke="#94a3b8" />
-                <YAxis stroke="#94a3b8" />
-                <Tooltip contentStyle={{ backgroundColor: '#1e293b', borderColor: '#334155', color: '#f8fafc' }} />
-                <Legend />
-                <Line type="monotone" dataKey="indoor_temp" stroke="#60a5fa" strokeWidth={3} name="Indoor Temp (°C)" />
-                <Line type="monotone" dataKey="outdoor_temp" stroke="#f97316" strokeWidth={2} name="Outdoor Temp (°C)" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Controls */}
-        <div className="col-span-1 rounded-2xl border border-slate-700 bg-slate-800/50 p-6 backdrop-blur flex flex-col">
-          <h2 className="mb-4 text-lg font-medium flex items-center gap-2">
-            <Settings2 className="h-5 w-5" /> Manual Control Override
-          </h2>
-          <div className="flex flex-col gap-3">
-            <button onClick={() => takeAction(0)} className="rounded-lg bg-slate-700 py-3 hover:bg-slate-600 font-medium transition-colors">
-              Do Nothing (Idle)
-            </button>
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => takeAction(1)} className="rounded-lg bg-blue-600/80 py-3 hover:bg-blue-500 font-medium transition-colors">
-                AC ON
-              </button>
-              <button onClick={() => takeAction(2)} className="rounded-lg bg-slate-700 py-3 hover:bg-slate-600 font-medium transition-colors">
-                AC OFF
-              </button>
+        {/* Dashboard body */}
+        <main
+          style={{
+            flex: 1,
+            padding: 'var(--space-6)',
+            overflowY: 'auto',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 'var(--space-5)',
+          }}
+        >
+          {/* Summary strip */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 'var(--space-6)',
+              padding: 'var(--space-3) var(--space-5)',
+              background: 'var(--surface-1)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: 'var(--radius-lg)',
+              fontSize: '0.8125rem',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Total Cost</span>
+              <span
+                className="data-value"
+                style={{ fontWeight: 600, color: 'var(--color-warning)', fontFamily: 'var(--font-mono)' }}
+              >
+                ${cumulativeCost.toFixed(3)}
+              </span>
             </div>
-            <div className="grid grid-cols-2 gap-2 mt-4 pt-4 border-t border-slate-700">
-              <button onClick={() => takeAction(3)} className="rounded-lg bg-emerald-600/80 py-3 hover:bg-emerald-500 font-medium transition-colors text-sm">
-                Charge Batt
-              </button>
-              <button onClick={() => takeAction(4)} className="rounded-lg bg-amber-600/80 py-3 hover:bg-amber-500 font-medium transition-colors text-sm">
-                Discharge Batt
-              </button>
+            <div
+              style={{
+                width: 1,
+                height: 16,
+                background: 'var(--border-subtle)',
+              }}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Total Reward</span>
+              <span
+                className="data-value"
+                style={{
+                  fontWeight: 600,
+                  color: cumulativeReward >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                {cumulativeReward.toFixed(3)}
+              </span>
+            </div>
+            <div
+              style={{
+                width: 1,
+                height: 16,
+                background: 'var(--border-subtle)',
+              }}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Solar Output</span>
+              <span
+                className="data-value"
+                style={{
+                  fontWeight: 600,
+                  color: 'var(--chart-solar)',
+                  fontFamily: 'var(--font-mono)',
+                }}
+              >
+                {((current.solar_gen || 0) * 5).toFixed(1)} kW
+              </span>
             </div>
           </div>
-        </div>
+
+          {/* KPI Cards */}
+          <KpiGrid current={current} deltas={deltas} />
+
+          {/* Charts row: Thermal (2/3) + Battery + Action (1/3) */}
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '2fr 1fr',
+              gap: 'var(--space-5)',
+              minHeight: 0,
+            }}
+          >
+            {/* Left column: charts stacked */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+              <ThermalChart history={history} />
+              <EnergyChart history={history} />
+            </div>
+
+            {/* Right column: battery + actions + reward */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+              <ActionPanel
+                onAction={step}
+                actionLog={actionLog}
+                terminated={current.terminated}
+              />
+              <BatteryGauge
+                soc={current.battery_soc}
+                isCharging={isCharging}
+                isDischarging={isDischarging}
+              />
+              <RewardChart
+                history={history}
+                cumulativeReward={cumulativeReward}
+              />
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   );
