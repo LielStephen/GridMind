@@ -1,15 +1,40 @@
-venv/
-
+# ─── Python ─────────────────────────────────────────────────
 __pycache__/
-
-*.pyc
-
-.env
-
-.idea/
-
-.vscode/
-
-node_modules/
-
+*.py[cod]
+*$py.class
+*.egg-info/
+*.egg
 dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# ─── IDE / Editor ───────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# ─── Environment / secrets ──────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ─── Node / Frontend ───────────────────────────────────────
+node_modules/
+frontend/dist/
+
+# ─── Training artifacts ────────────────────────────────────
+ppo_gridmind_tensorboard/
+*.zip
+!requirements*.txt
+
+# ─── OS generated ──────────────────────────────────────────
+Thumbs.db
+Desktop.ini

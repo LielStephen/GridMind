@@ -1,17 +1,21 @@
-# Add your backend python requirements here
-# e.g., fastapi, uvicorn, numpy, torch, gymnasium
+# Core
 fastapi
+uvicorn[standard]
+pydantic
 
-uvicorn
-
+# Scientific / RL
 numpy
-
 pandas
-
 matplotlib
-
 gymnasium
 
+# Training (install separately if training)
+# stable-baselines3
+# torch
+
+# Configuration
 python-dotenv
 
-pydantic
+# Testing
+pytest
+httpx
