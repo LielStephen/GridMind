@@ -17,7 +17,27 @@ GridMind is a reinforcement learning (RL) powered smart energy management simula
 
 ## 🛠️ Architecture Overview
 
-For a detailed review of the system design, check the [architecture.md](file:///e:/rl%20project/GridMind/architecture.md) documentation.
+For a detailed review of the system design, check the [architecture.md](file:///e:/rl project/GridMind/architecture.md) documentation.
+
+```mermaid
+graph TD
+    subgraph "Frontend (React + Vite)"
+        Dashboard[React Dashboard] -->|API Requests| API_Client[useSimulation hook]
+    end
+
+    subgraph "Backend (FastAPI + Gymnasium)"
+        API_Client -->|REST API| API_Server[FastAPI Server]
+        API_Server -->|Reads / Steps| RL_Env[GridMindEnv Gymnasium Env]
+        
+        RL_Env -->|Simulates Device| HVAC[Air Conditioner Model]
+        RL_Env -->|Simulates Device| Battery[Battery Storage Model]
+        RL_Env -->|Reads Signals| Weather[Weather & Price Provider]
+        
+        Settings[Settings Dataclasses] -->|Configures| RL_Env
+        
+        PPO_Agent[PPO Agent Stable-Baselines3] -->|Trains on| RL_Env
+    end
+```
 
 ```
 GridMind/

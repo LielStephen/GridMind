@@ -4,11 +4,11 @@ GridMind is a reinforcement learning (RL) powered smart energy management simula
 
 ```mermaid
 graph TD
-    subgraph Frontend (React + Vite)
+    subgraph "Frontend (React + Vite)"
         Dashboard[React Dashboard] -->|API Requests| API_Client[useSimulation hook]
     end
 
-    subgraph Backend (FastAPI + Gymnasium)
+    subgraph "Backend (FastAPI + Gymnasium)"
         API_Client -->|REST API| API_Server[FastAPI Server]
         API_Server -->|Reads / Steps| RL_Env[GridMindEnv Gymnasium Env]
         
