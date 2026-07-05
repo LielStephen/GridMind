@@ -50,6 +50,7 @@ export function useSimulation() {
         net_consumption: 0,
         reward: 0,
         terminated: false,
+        action: null,
       };
       prevStateRef.current = null;
       setCurrent(state);
@@ -85,6 +86,7 @@ export function useSimulation() {
         net_consumption: data.net_consumption,
         reward: data.reward,
         terminated: data.terminated,
+        action,
       };
 
       setCurrent(nextState);
