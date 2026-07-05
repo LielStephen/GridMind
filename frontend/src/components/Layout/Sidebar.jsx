@@ -1,8 +1,8 @@
 import React from 'react';
-import { Zap, RotateCcw, Play, Pause, LayoutDashboard } from 'lucide-react';
+import { Zap, RotateCcw, Play, Pause, LayoutDashboard, BarChart3 } from 'lucide-react';
 import StatusDot from '../common/StatusDot';
 
-export default function Sidebar({ isConnected, isAutoRunning, onReset, onToggleAutoRun, terminated }) {
+export default function Sidebar({ isConnected, isAutoRunning, onReset, onToggleAutoRun, terminated, activeTab, setActiveTab }) {
   return (
     <aside
       style={{
@@ -64,25 +64,46 @@ export default function Sidebar({ isConnected, isAutoRunning, onReset, onToggleA
       </div>
 
       {/* Nav */}
-      <nav style={{ padding: 'var(--space-4)', flex: 1 }}>
-        <div
+      <nav style={{ padding: 'var(--space-4)', flex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-2)' }}>
+        <button
+          onClick={() => setActiveTab('dashboard')}
+          className={`btn ${activeTab === 'dashboard' ? 'btn-accent' : ''}`}
           style={{
-            display: 'flex',
-            alignItems: 'center',
+            width: '100%',
+            justifyContent: 'flex-start',
             gap: 'var(--space-3)',
-            padding: 'var(--space-3) var(--space-4)',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--surface-2)',
-            border: '1px solid var(--border-default)',
-            color: 'var(--text-primary)',
+            padding: 'var(--space-2) var(--space-4)',
             fontSize: '0.8125rem',
-            fontWeight: 500,
-            cursor: 'default',
+            fontWeight: activeTab === 'dashboard' ? 600 : 500,
+            background: activeTab === 'dashboard' ? 'var(--surface-3)' : 'transparent',
+            borderColor: activeTab === 'dashboard' ? 'var(--accent)' : 'transparent',
+            color: activeTab === 'dashboard' ? 'var(--accent)' : 'var(--text-muted)',
+            boxShadow: 'none',
           }}
         >
-          <LayoutDashboard size={16} style={{ opacity: 0.7 }} />
+          <LayoutDashboard size={15} style={{ opacity: activeTab === 'dashboard' ? 1 : 0.6 }} />
           Dashboard
-        </div>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('analytics')}
+          className={`btn ${activeTab === 'analytics' ? 'btn-accent' : ''}`}
+          style={{
+            width: '100%',
+            justifyContent: 'flex-start',
+            gap: 'var(--space-3)',
+            padding: 'var(--space-2) var(--space-4)',
+            fontSize: '0.8125rem',
+            fontWeight: activeTab === 'analytics' ? 600 : 500,
+            background: activeTab === 'analytics' ? 'var(--surface-3)' : 'transparent',
+            borderColor: activeTab === 'analytics' ? 'var(--accent)' : 'transparent',
+            color: activeTab === 'analytics' ? 'var(--accent)' : 'var(--text-muted)',
+            boxShadow: 'none',
+          }}
+        >
+          <BarChart3 size={15} style={{ opacity: activeTab === 'analytics' ? 1 : 0.6 }} />
+          Analytics
+        </button>
       </nav>
 
       {/* Controls */}

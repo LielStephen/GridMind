@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSimulation } from './hooks/useSimulation';
 import Sidebar from './components/Layout/Sidebar';
 import TopBar from './components/Layout/TopBar';
@@ -8,8 +8,10 @@ import EnergyChart from './components/Dashboard/EnergyChart';
 import RewardChart from './components/Dashboard/RewardChart';
 import BatteryGauge from './components/Dashboard/BatteryGauge';
 import ActionPanel from './components/Dashboard/ActionPanel';
+import AnalyticsView from './components/Dashboard/AnalyticsView';
 
 function App() {
+  const [activeTab, setActiveTab] = useState('dashboard');
   const {
     current,
     history,
@@ -83,6 +85,8 @@ function App() {
         onReset={reset}
         onToggleAutoRun={toggleAutoRun}
         terminated={current.terminated}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
 
       {/* Main content */}
@@ -107,106 +111,116 @@ function App() {
             gap: 'var(--space-5)',
           }}
         >
-          {/* Summary strip */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 'var(--space-6)',
-              padding: 'var(--space-3) var(--space-5)',
-              background: 'var(--surface-1)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-lg)',
-              fontSize: '0.8125rem',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Total Cost</span>
-              <span
-                className="data-value"
-                style={{ fontWeight: 600, color: 'var(--color-warning)', fontFamily: 'var(--font-mono)' }}
-              >
-                ${cumulativeCost.toFixed(3)}
-              </span>
-            </div>
-            <div
-              style={{
-                width: 1,
-                height: 16,
-                background: 'var(--border-subtle)',
-              }}
-            />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Total Reward</span>
-              <span
-                className="data-value"
+          {activeTab === 'dashboard' ? (
+            <>
+              {/* Summary strip */}
+              <div
                 style={{
-                  fontWeight: 600,
-                  color: cumulativeReward >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
-                  fontFamily: 'var(--font-mono)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 'var(--space-6)',
+                  padding: 'var(--space-3) var(--space-5)',
+                  background: 'var(--surface-1)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: 'var(--radius-lg)',
+                  fontSize: '0.8125rem',
                 }}
               >
-                {cumulativeReward.toFixed(3)}
-              </span>
-            </div>
-            <div
-              style={{
-                width: 1,
-                height: 16,
-                background: 'var(--border-subtle)',
-              }}
-            />
-            <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Solar Output</span>
-              <span
-                className="data-value"
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Total Cost</span>
+                  <span
+                    className="data-value"
+                    style={{ fontWeight: 600, color: 'var(--color-warning)', fontFamily: 'var(--font-mono)' }}
+                  >
+                    ${cumulativeCost.toFixed(3)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    width: 1,
+                    height: 16,
+                    background: 'var(--border-subtle)',
+                  }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Total Reward</span>
+                  <span
+                    className="data-value"
+                    style={{
+                      fontWeight: 600,
+                      color: cumulativeReward >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    {cumulativeReward.toFixed(3)}
+                  </span>
+                </div>
+                <div
+                  style={{
+                    width: 1,
+                    height: 16,
+                    background: 'var(--border-subtle)',
+                  }}
+                />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Solar Output</span>
+                  <span
+                    className="data-value"
+                    style={{
+                      fontWeight: 600,
+                      color: 'var(--chart-solar)',
+                      fontFamily: 'var(--font-mono)',
+                    }}
+                  >
+                    {((current.solar_gen || 0) * 5).toFixed(1)} kW
+                  </span>
+                </div>
+              </div>
+
+              {/* KPI Cards */}
+              <KpiGrid current={current} deltas={deltas} />
+
+              {/* Charts row: Thermal (2/3) + Battery + Action (1/3) */}
+              <div
                 style={{
-                  fontWeight: 600,
-                  color: 'var(--chart-solar)',
-                  fontFamily: 'var(--font-mono)',
+                  display: 'grid',
+                  gridTemplateColumns: '2fr 1fr',
+                  gap: 'var(--space-5)',
+                  minHeight: 0,
                 }}
               >
-                {((current.solar_gen || 0) * 5).toFixed(1)} kW
-              </span>
-            </div>
-          </div>
+                {/* Left column: charts stacked */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+                  <ThermalChart history={history} />
+                  <EnergyChart history={history} />
+                </div>
 
-          {/* KPI Cards */}
-          <KpiGrid current={current} deltas={deltas} />
-
-          {/* Charts row: Thermal (2/3) + Battery + Action (1/3) */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: '2fr 1fr',
-              gap: 'var(--space-5)',
-              minHeight: 0,
-            }}
-          >
-            {/* Left column: charts stacked */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-              <ThermalChart history={history} />
-              <EnergyChart history={history} />
-            </div>
-
-            {/* Right column: battery + actions + reward */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
-              <ActionPanel
-                onAction={step}
-                actionLog={actionLog}
-                terminated={current.terminated}
-              />
-              <BatteryGauge
-                soc={current.battery_soc}
-                isCharging={isCharging}
-                isDischarging={isDischarging}
-              />
-              <RewardChart
-                history={history}
-                cumulativeReward={cumulativeReward}
-              />
-            </div>
-          </div>
+                {/* Right column: battery + actions + reward */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-5)' }}>
+                  <ActionPanel
+                    onAction={step}
+                    actionLog={actionLog}
+                    terminated={current.terminated}
+                  />
+                  <BatteryGauge
+                    soc={current.battery_soc}
+                    isCharging={isCharging}
+                    isDischarging={isDischarging}
+                  />
+                  <RewardChart
+                    history={history}
+                    cumulativeReward={cumulativeReward}
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <AnalyticsView
+              history={history}
+              cumulativeReward={cumulativeReward}
+              cumulativeCost={cumulativeCost}
+            />
+          )}
         </main>
       </div>
     </div>
