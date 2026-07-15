@@ -161,24 +161,40 @@ export default function EnergyChart({ history }) {
               />
               <Tooltip content={<CustomTooltip />} />
               <Area
-                type="monotone"
+                type="linear"
                 dataKey="solar"
                 stroke="var(--chart-solar)"
                 fill="url(#solarGrad)"
                 strokeWidth={1.5}
                 name="Solar"
                 dot={false}
-                activeDot={{ r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
               />
               <Area
-                type="monotone"
+                type="linear"
                 dataKey="net"
                 stroke="var(--chart-net)"
                 fill="none"
-                strokeWidth={2}
+                strokeWidth={2.5}
                 name="Net Load"
-                dot={false}
-                activeDot={{ r: 4, strokeWidth: 0 }}
+                dot={(props) => {
+                  const { cx, cy, payload } = props;
+                  if (payload.net > 2000) {
+                    return (
+                      <circle
+                        key={`spike-${payload.step}`}
+                        cx={cx}
+                        cy={cy}
+                        r={3.5}
+                        fill="#ff0055"
+                        stroke="#ffffff"
+                        strokeWidth={1.5}
+                      />
+                    );
+                  }
+                  return null;
+                }}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -187,3 +203,4 @@ export default function EnergyChart({ history }) {
     </div>
   );
 }
+

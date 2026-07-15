@@ -77,13 +77,13 @@ export default function RewardChart({ history, cumulativeReward }) {
               </defs>
               <Tooltip content={<MiniTooltip />} />
               <Area
-                type="monotone"
+                type="linear"
                 dataKey="cumReward"
                 stroke={strokeColor}
                 fill={`url(#${gradId})`}
-                strokeWidth={2}
+                strokeWidth={2.5}
                 dot={false}
-                activeDot={{ r: 3, strokeWidth: 0 }}
+                activeDot={{ r: 4, strokeWidth: 2, stroke: '#fff' }}
               />
             </AreaChart>
           </ResponsiveContainer>
@@ -92,3 +92,4 @@ export default function RewardChart({ history, cumulativeReward }) {
     </div>
   );
 }
+

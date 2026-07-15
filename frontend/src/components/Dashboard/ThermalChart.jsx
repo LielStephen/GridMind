@@ -178,16 +178,32 @@ export default function ThermalChart({ history }) {
               />
               <Tooltip content={<CustomTooltip />} />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="indoor"
                 stroke="var(--chart-indoor)"
-                strokeWidth={2}
-                dot={false}
+                strokeWidth={2.5}
+                dot={(props) => {
+                  const { cx, cy, payload } = props;
+                  if (payload.indoor < 20.0 || payload.indoor > 24.0) {
+                    return (
+                      <circle
+                        key={`t-spike-${payload.step}`}
+                        cx={cx}
+                        cy={cy}
+                        r={3.5}
+                        fill="#ff9900"
+                        stroke="#ffffff"
+                        strokeWidth={1.5}
+                      />
+                    );
+                  }
+                  return null;
+                }}
                 name="Indoor"
-                activeDot={{ r: 4, strokeWidth: 0 }}
+                activeDot={{ r: 5, strokeWidth: 2, stroke: '#fff' }}
               />
               <Line
-                type="monotone"
+                type="linear"
                 dataKey="outdoor"
                 stroke="var(--chart-outdoor)"
                 strokeWidth={1.5}
@@ -203,3 +219,4 @@ export default function ThermalChart({ history }) {
     </div>
   );
 }
+
